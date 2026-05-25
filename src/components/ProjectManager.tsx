@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Project, Kanban, DataAsset } from '../types/timeline';
-import { Card, Button, Form, Input, Tabs, TabPane, Modal, Dialog } from 'element-ui';
+import { Project } from '../types/timeline';
+import { Card, Button, Form, Input, Dialog } from './ui';
 
 interface ProjectManagerProps {
   projects: Project[];

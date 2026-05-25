@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { DataAsset, DataPoint, ChartConfig } from '../types/timeline';
-import { Card, Button, Form, Input, Select, Dialog, Upload, Icon, Slider, Switch } from 'element-ui';
+import { DataAsset, DataPoint } from '../types/timeline';
+import { Card, Button, Form, Input, Select, Dialog, Upload, Icon } from './ui';
 
 interface DataAssetManagerProps {
   dataAssets: DataAsset[];
@@ -142,6 +142,8 @@ const DataAssetManager: React.FC<DataAssetManagerProps> = ({
     const maxTime = Math.max(...timestamps);
     const minValue = Math.min(...values);
     const maxValue = Math.max(...values);
+    const timeSpan = Math.max(maxTime - minTime, 1);
+    const valueSpan = Math.max(maxValue - minValue, 1);
 
     // Draw grid
     if (asset.chartConfig.showGrid) {
@@ -173,9 +175,9 @@ const DataAssetManager: React.FC<DataAssetManagerProps> = ({
     ctx.lineWidth = 2;
 
     const xScale = (timestamp: number) => 
-      padding + ((timestamp - minTime) / (maxTime - minTime)) * (width - 2 * padding);
+      padding + ((timestamp - minTime) / timeSpan) * (width - 2 * padding);
     const yScale = (value: number) => 
-      height - padding - ((value - minValue) / (maxValue - minValue)) * (height - 2 * padding);
+      height - padding - ((value - minValue) / valueSpan) * (height - 2 * padding);
 
     if (asset.chartConfig.chartType === 'line') {
       // Draw line chart
@@ -205,7 +207,7 @@ const DataAssetManager: React.FC<DataAssetManagerProps> = ({
       const barWidth = (width - 2 * padding) / asset.data.length * 0.8;
       asset.data.forEach((point, index) => {
         const x = padding + (index * (width - 2 * padding) / asset.data.length) + barWidth * 0.1;
-        const barHeight = (point.value - minValue) / (maxValue - minValue) * (height - 2 * padding);
+        const barHeight = Math.max((point.value - minValue) / valueSpan * (height - 2 * padding), 2);
         const y = height - padding - barHeight;
         
         ctx.fillRect(x, y, barWidth, barHeight);

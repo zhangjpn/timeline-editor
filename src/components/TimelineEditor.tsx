@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Timeline, TimelineEvent } from '../types/timeline';
-import { Form, Input, Button, Card, Row, Col, DatePicker, ColorPicker, Upload, Icon } from 'element-ui';
+import { Form, Input, Button, Card, Row, Col, DatePicker, ColorPicker, Upload, Icon } from './ui';
 
 interface TimelineEditorProps {
   timeline: Timeline;
@@ -20,7 +20,8 @@ const TimelineEditor: React.FC<TimelineEditorProps> = ({
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    timestamp: Date.now(),
+    startTime: Date.now(),
+    endTime: undefined as number | undefined,
     color: '#409eff',
     icon: '',
     imageData: ''
@@ -36,7 +37,8 @@ const TimelineEditor: React.FC<TimelineEditorProps> = ({
     setFormData({
       title: '',
       description: '',
-      timestamp: Date.now(),
+      startTime: Date.now(),
+      endTime: undefined,
       color: '#409eff',
       icon: '',
       imageData: ''
@@ -96,9 +98,20 @@ const TimelineEditor: React.FC<TimelineEditorProps> = ({
               <Form.Item label="Date & Time">
                 <DatePicker
                   type="datetime"
-                  value={new Date(formData.timestamp)}
-                  onChange={(date) => setFormData({ ...formData, timestamp: date?.getTime() || Date.now() })}
+                  value={new Date(formData.startTime)}
+                  onChange={(date) => setFormData({ ...formData, startTime: date?.getTime() || Date.now() })}
                   placeholder="Select date and time"
+                  style={{ width: '100%' }}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item label="End Time">
+                <DatePicker
+                  type="datetime"
+                  value={formData.endTime ? new Date(formData.endTime) : undefined}
+                  onChange={(date) => setFormData({ ...formData, endTime: date?.getTime() })}
+                  placeholder="Optional end date and time"
                   style={{ width: '100%' }}
                 />
               </Form.Item>
@@ -174,7 +187,8 @@ const TimelineEditor: React.FC<TimelineEditorProps> = ({
                   <Col span={18}>
                     <h4>{event.title}</h4>
                     <p style={{ margin: '5px 0', color: '#666' }}>
-                      {new Date(event.timestamp).toLocaleString()}
+                      {new Date(event.startTime).toLocaleString()}
+                      {event.endTime ? ` - ${new Date(event.endTime).toLocaleString()}` : ''}
                     </p>
                     {event.description && (
                       <p style={{ margin: '5px 0' }}>{event.description}</p>

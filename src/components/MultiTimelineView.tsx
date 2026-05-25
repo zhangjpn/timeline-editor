@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Timeline, TimelineEvent, DataAsset, KanbanLayout } from '../types/timeline';
-import { Button, Card, Slider, Switch, Dialog, Form, Input, DatePicker, ColorPicker, Select } from 'element-ui';
+import { Timeline, TimelineEvent, DataAsset, Kanban, KanbanLayout } from '../types/timeline';
+import { Button, Card, Slider, Switch, Dialog, Form, Input, DatePicker, ColorPicker, Select } from './ui';
 
 interface MultiTimelineViewProps {
   kanban: Kanban;
@@ -96,7 +96,7 @@ const MultiTimelineView: React.FC<MultiTimelineViewProps> = ({
         const endTimestamps = allEvents.filter(e => e.endTime).map(e => e.endTime!);
         const minTime = Math.min(...timestamps);
         const maxTime = Math.max(...timestamps, ...endTimestamps);
-        const padding = (maxTime - minTime) * 0.1;
+        const padding = Math.max((maxTime - minTime) * 0.1, 3600000);
         
         setViewOptions(prev => ({
           ...prev,
@@ -192,7 +192,7 @@ const MultiTimelineView: React.FC<MultiTimelineViewProps> = ({
               
               {viewOptions.showDataAssets && event.dataAssetId && (
                 <div style={{ fontSize: '10px', marginTop: '2px' }}>
-                  📊 {getDataAssetById(event.dataAssetId)?.name}
+                  Data: {getDataAssetById(event.dataAssetId)?.name}
                 </div>
               )}
             </div>

@@ -6,12 +6,28 @@ declare global {
   }
 }
 
-const { ipcRenderer } = window.require('electron');
+const getIpcRenderer = () => {
+  if (typeof window === 'undefined' || !window.require) {
+    return null;
+  }
+
+  try {
+    return window.require('electron').ipcRenderer;
+  } catch {
+    return null;
+  }
+};
 
 export class TimelineStorage {
   // Project management
   static async saveProject(filePath: string, project: Project): Promise<{ success: boolean; error?: string }> {
     try {
+      const ipcRenderer = getIpcRenderer();
+      if (!ipcRenderer) {
+        localStorage.setItem(filePath, JSON.stringify(project));
+        return { success: true };
+      }
+
       const result = await ipcRenderer.invoke('save-file', filePath, project);
       return result;
     } catch (error: any) {
@@ -132,13 +148,31 @@ export class TimelineStorage {
     };
   }
 
+  static async saveTimeline(
+    filePath: string,
+    timeline: Timeline
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      const ipcRenderer = getIpcRenderer();
+      if (!ipcRenderer) {
+        localStorage.setItem(filePath, JSON.stringify(timeline));
+        return { success: true };
+      }
+
+      const result = await ipcRenderer.invoke('save-file', filePath, timeline);
+      return result;
+    } catch (error: any) {
+      return { success: false, error: error?.message || 'Unknown error' };
+    }
+  }
+
   // Event management
   static loadTimelineEvent(data: any): TimelineEvent {
     return {
       id: data.id || this.generateEventId(),
       title: data.title || 'Untitled Event',
       description: data.description,
-      startTime: data.startTime || data.timestamp || Date.now(), // Backward compatibility
+      startTime: data.startTime ?? data.timestamp ?? Date.now(), // Backward compatibility
       endTime: data.endTime,
       color: data.color || '#409eff',
       icon: data.icon,
@@ -193,8 +227,8 @@ export class TimelineStorage {
 
   static loadDataPoint(data: any): DataPoint {
     return {
-      timestamp: data.timestamp || Date.now(),
-      value: data.value || 0,
+      timestamp: data.timestamp ?? Date.now(),
+      value: data.value ?? 0,
       label: data.label,
       metadata: data.metadata
     };
@@ -312,15 +346,15 @@ export class TimelineStorage {
       errors.push('Event title is required');
     }
 
-    if (!event.startTime || typeof event.startTime !== 'number') {
+    if (typeof event.startTime !== 'number') {
       errors.push('Event start time is required and must be a number');
     }
 
-    if (event.endTime && typeof event.endTime !== 'number') {
+    if (event.endTime !== undefined && typeof event.endTime !== 'number') {
       errors.push('Event end time must be a number');
     }
 
-    if (event.endTime && event.startTime && event.endTime < event.startTime) {
+    if (event.endTime !== undefined && event.endTime < event.startTime) {
       errors.push('Event end time must be after start time');
     }
 
@@ -341,7 +375,7 @@ export class TimelineStorage {
       errors.push('Data asset data must be an array');
     } else {
       asset.data.forEach((point, index) => {
-        if (!point.timestamp || typeof point.timestamp !== 'number') {
+        if (typeof point.timestamp !== 'number') {
           errors.push(`Data point ${index + 1}: timestamp is required and must be a number`);
         }
         if (typeof point.value !== 'number') {

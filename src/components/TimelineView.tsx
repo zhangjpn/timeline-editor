@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Timeline, TimelineEvent, TimelineViewOptions } from '../types/timeline';
-import { Button, Card, Slider, Switch, Dialog, Form, Input, DatePicker, ColorPicker } from 'element-ui';
+import { Button, Card, Slider, Switch, Dialog, Form, Input, DatePicker, ColorPicker } from './ui';
 
 interface TimelineViewProps {
   timeline: Timeline;
@@ -15,10 +15,12 @@ const TimelineView: React.FC<TimelineViewProps> = ({
 }) => {
   const [viewOptions, setViewOptions] = useState<TimelineViewOptions>({
     zoom: 1,
-    startTime: Math.min(...timeline.events.map(e => e.timestamp), Date.now()),
-    endTime: Math.max(...timeline.events.map(e => e.timestamp), Date.now() + 86400000),
+    startTime: Math.min(...timeline.events.map(e => e.startTime), Date.now()),
+    endTime: Math.max(...timeline.events.map(e => e.endTime || e.startTime), Date.now() + 86400000),
     showGrid: true,
-    showImages: true
+    showImages: true,
+    showDataAssets: false,
+    selectedTimelineIds: [timeline.id]
   });
 
   const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(null);
@@ -38,7 +40,8 @@ const TimelineView: React.FC<TimelineViewProps> = ({
     setEditForm({
       title: event.title,
       description: event.description,
-      timestamp: event.timestamp,
+      startTime: event.startTime,
+      endTime: event.endTime,
       color: event.color || '#409eff',
       icon: event.icon
     });
@@ -67,10 +70,11 @@ const TimelineView: React.FC<TimelineViewProps> = ({
 
   useEffect(() => {
     if (timeline.events.length > 0) {
-      const timestamps = timeline.events.map(e => e.timestamp);
+      const timestamps = timeline.events.map(e => e.startTime);
+      const endTimestamps = timeline.events.filter(e => e.endTime).map(e => e.endTime!);
       const minTime = Math.min(...timestamps);
-      const maxTime = Math.max(...timestamps);
-      const padding = (maxTime - minTime) * 0.1; // 10% padding
+      const maxTime = Math.max(...timestamps, ...endTimestamps);
+      const padding = Math.max((maxTime - minTime) * 0.1, 3600000); // 10% padding or one hour
       
       setViewOptions(prev => ({
         ...prev,
@@ -147,7 +151,7 @@ const TimelineView: React.FC<TimelineViewProps> = ({
           ) : (
             <div style={{ position: 'relative', height: '100%', minWidth: `${timeRange * pixelsPerMs}px` }}>
               {timeline.events.map((event, index) => {
-                const position = getEventPosition(event.timestamp);
+                const position = getEventPosition(event.startTime);
                 const topPosition = 50 + (index % 3) * 80; // Stagger events vertically
                 
                 return (
@@ -171,7 +175,8 @@ const TimelineView: React.FC<TimelineViewProps> = ({
                   >
                     <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>{event.title}</div>
                     <div style={{ fontSize: '12px', opacity: 0.8 }}>
-                      {new Date(event.timestamp).toLocaleDateString()}
+                      {new Date(event.startTime).toLocaleDateString()}
+                      {event.endTime ? ` - ${new Date(event.endTime).toLocaleDateString()}` : ''}
                     </div>
                     {viewOptions.showImages && event.imageData && (
                       <img
@@ -212,9 +217,18 @@ const TimelineView: React.FC<TimelineViewProps> = ({
           <Form.Item label="Date & Time">
             <DatePicker
               type="datetime"
-              value={editForm.timestamp ? new Date(editForm.timestamp) : new Date()}
-              onChange={(date) => setEditForm({ ...editForm, timestamp: date?.getTime() || Date.now() })}
+              value={editForm.startTime ? new Date(editForm.startTime) : new Date()}
+              onChange={(date) => setEditForm({ ...editForm, startTime: date?.getTime() || Date.now() })}
               placeholder="Select date and time"
+              style={{ width: '100%' }}
+            />
+          </Form.Item>
+          <Form.Item label="End Time">
+            <DatePicker
+              type="datetime"
+              value={editForm.endTime ? new Date(editForm.endTime) : undefined}
+              onChange={(date) => setEditForm({ ...editForm, endTime: date?.getTime() })}
+              placeholder="Select end time (optional)"
               style={{ width: '100%' }}
             />
           </Form.Item>

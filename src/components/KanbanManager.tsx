@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Kanban, Timeline, KanbanLayout } from '../types/timeline';
-import { Card, Button, Form, Input, Select, Dialog, Slider } from 'element-ui';
+import { Card, Button, Form, Input, Select, Dialog, Slider } from './ui';
 
 interface KanbanManagerProps {
   kanbans: Kanban[];
