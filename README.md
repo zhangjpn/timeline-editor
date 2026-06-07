@@ -64,3 +64,51 @@ timeline-editor/
 └── .gitignore               # Git忽略文件
 ```
 
+## 开发
+
+### 本地运行
+
+本项目基于 React + Electron。下面说明在开发和调试时的本地运行步骤。
+
+**先决条件**:
+- Node.js (建议 16+)
+- npm 或 yarn
+
+1. 安装依赖
+
+```bash
+npm install
+# 或者使用 yarn
+# yarn
+```
+
+2. 在浏览器模式下本地开发（仅运行 React 开发服务器）
+
+```bash
+npm start
+```
+
+3. 在 Electron 开发模式（同时启动 React 开发服务器并打开 Electron）
+
+```bash
+npm run electron-dev
+```
+
+4. 生成生产包并在 Electron 中运行（用于测试构建产物）
+
+```bash
+npm run build
+npm run electron
+```
+
+5. 打包应用（生成安装包）
+
+```bash
+npm run electron-pack
+```
+
+常见问题：
+- 如果 `npm run electron-dev` 无法启动，请确认 `concurrently` 和 `wait-on` 已安装（已列在 devDependencies）。
+- 如需在不同端口运行开发服务器，可设置环境变量 `PORT`，例如 `PORT=3001 npm start`。
+
+更多细节和脚本定义请参见 `package.json` 中的 `scripts` 部分。
